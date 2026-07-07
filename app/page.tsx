@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { StoreProvider } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { StoreProvider, useStore } from "@/lib/store";
 import type { ViewKey } from "@/lib/types";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
@@ -12,12 +12,20 @@ import { Production } from "@/components/Production";
 import { Inventory } from "@/components/Inventory";
 import { SupplierDashboard } from "@/components/SupplierDashboard";
 import { AssistantPage } from "@/components/AssistantPage";
+import { LowStockPage } from "@/components/LowStockPage";
 import { FloatingAssistant } from "@/components/FloatingAssistant";
 import { GlobalLowStockBar } from "@/components/GlobalLowStockBar";
 import { SupplyRequestModal } from "@/components/SupplyRequestModal";
 
 function AppShell() {
   const [view, setView] = useState<ViewKey>("dashboard");
+  const { customPages } = useStore();
+
+  useEffect(() => {
+    if (view === "low-stock" && !customPages.includes("low-stock")) {
+      setView("dashboard");
+    }
+  }, [view, customPages]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--color-paper)] paper-grain">
@@ -32,6 +40,7 @@ function AppShell() {
           {view === "inventory" && <Inventory />}
           {view === "supplier" && <SupplierDashboard />}
           {view === "assistant" && <AssistantPage />}
+          {view === "low-stock" && customPages.includes("low-stock") && <LowStockPage onNavigate={setView} />}
         </main>
       </div>
       <ToastContainer />

@@ -114,13 +114,16 @@ export interface Toast {
   message: string;
 }
 
+export type CustomPageKey = "low-stock";
+
 export type ViewKey =
   | "dashboard"
   | "po-upload"
   | "production"
   | "inventory"
   | "supplier"
-  | "assistant";
+  | "assistant"
+  | CustomPageKey;
 
 export type DashboardWidgetKey =
   | "supplier-insights"

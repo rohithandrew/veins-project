@@ -1,4 +1,4 @@
-import type { Material, PurchaseOrder, StockRequest, SupplyRequest, Supplier, DashboardWidgetKey } from "./types";
+import type { Material, PurchaseOrder, StockRequest, SupplyRequest, Supplier, DashboardWidgetKey, CustomPageKey } from "./types";
 
 interface AssistantState {
   materials: Material[];
@@ -12,8 +12,28 @@ export interface AssistantReply {
   text: string;
   addWidget?: DashboardWidgetKey;
   removeWidget?: DashboardWidgetKey;
+  addPage?: CustomPageKey;
+  removePage?: CustomPageKey;
   delayMs: number;
 }
+
+interface PageIntent {
+  key: CustomPageKey;
+  label: string;
+  matches: (q: string) => boolean;
+  addDelayMs: number;
+  addText: string;
+}
+
+const PAGE_INTENTS: PageIntent[] = [
+  {
+    key: "low-stock",
+    label: "Low Stock",
+    matches: (q) => q.includes("page") && q.includes("low") && q.includes("stock"),
+    addDelayMs: 20000,
+    addText: "Sure — building a new page that only shows materials currently low on stock, and adding it to your sidebar now.",
+  },
+];
 
 interface WidgetIntent {
   key: DashboardWidgetKey;
@@ -88,6 +108,18 @@ export function generateReply(rawQuery: string, state: AssistantState): Assistan
     return { text: intent.addText, addWidget: intent.key, delayMs: intent.addDelayMs };
   }
 
+  for (const intent of PAGE_INTENTS) {
+    if (!intent.matches(q)) continue;
+    if (isRemove) {
+      return {
+        text: `Done — I've removed the ${intent.label} page from your sidebar.`,
+        removePage: intent.key,
+        delayMs: 900,
+      };
+    }
+    return { text: intent.addText, addPage: intent.key, delayMs: intent.addDelayMs };
+  }
+
   if (q.includes("low stock") || q.includes("reorder") || q.includes("running out") || q.includes("at risk")) {
     const low = listLowStock(state.materials);
     if (low.length === 0) {
@@ -140,13 +172,13 @@ export function generateReply(rawQuery: string, state: AssistantState): Assistan
 
   if (q.includes("help") || q.includes("what can you")) {
     return {
-      text: "I can answer questions about stock levels, purchase order status, and suppliers. I can also customize this app — try: \"add supplier dashboard insight\", \"add delivery timeline to dashboard\", \"add pending requests widget\", \"add PO status breakdown\", or \"add critical materials panel\".",
+      text: "I can answer questions about stock levels, purchase order status, and suppliers. I can also customize this app — try: \"add supplier dashboard insight\", \"add delivery timeline to dashboard\", \"add pending requests widget\", \"add PO status breakdown\", \"add critical materials panel\", or \"add a new page for low stock materials\".",
       delayMs: 1000,
     };
   }
 
   return {
-    text: "I'm not sure about that yet, but I can help with stock levels, PO status, supplier details, or adding insight widgets to your Dashboard. Try rephrasing, or ask \"help\" for examples.",
+    text: "I'm not sure about that yet, but I can help with stock levels, PO status, supplier details, adding insight widgets to your Dashboard, or creating new pages like a dedicated Low Stock page. Try rephrasing, or ask \"help\" for examples.",
     delayMs: 1200,
   };
 }

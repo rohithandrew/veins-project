@@ -12,6 +12,7 @@ const titles: Record<ViewKey, string> = {
   inventory: "Inventory Management",
   supplier: "Supplier Dashboard",
   assistant: "AI Assistant",
+  "low-stock": "Low Stock",
 };
 
 export function Topbar({ current }: { current: ViewKey }) {

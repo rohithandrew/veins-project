@@ -29,7 +29,14 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
     setInput("");
     const reply = generateReply(trimmed, { materials, suppliers, purchaseOrders, stockRequests, supplyRequests });
     setTimeout(() => {
-      dispatch({ type: "ASSISTANT_REPLY", text: reply.text, addWidget: reply.addWidget, removeWidget: reply.removeWidget });
+      dispatch({
+        type: "ASSISTANT_REPLY",
+        text: reply.text,
+        addWidget: reply.addWidget,
+        removeWidget: reply.removeWidget,
+        addPage: reply.addPage,
+        removePage: reply.removePage,
+      });
     }, reply.delayMs);
   }
 

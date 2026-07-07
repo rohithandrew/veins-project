@@ -14,6 +14,7 @@ import type {
   BOMItem,
   AssistantMessage,
   DashboardWidgetKey,
+  CustomPageKey,
 } from "./types";
 import {
   materials as seedMaterials,
@@ -39,6 +40,7 @@ interface State {
   toasts: Toast[];
   assistantMessages: AssistantMessage[];
   dashboardWidgets: DashboardWidgetKey[];
+  customPages: CustomPageKey[];
   activeSupplyRequest: { materialId: string; qty?: number; linkedStockRequestId?: string } | null;
 }
 
@@ -66,6 +68,8 @@ type Action =
       text: string;
       addWidget?: DashboardWidgetKey;
       removeWidget?: DashboardWidgetKey;
+      addPage?: CustomPageKey;
+      removePage?: CustomPageKey;
     }
   | {
       type: "OPEN_SUPPLY_MODAL";
@@ -74,7 +78,20 @@ type Action =
       linkedStockRequestId?: string;
     }
   | { type: "CLOSE_SUPPLY_MODAL" }
-  | { type: "REMOVE_DASHBOARD_WIDGET"; widget: DashboardWidgetKey };
+  | { type: "REMOVE_DASHBOARD_WIDGET"; widget: DashboardWidgetKey }
+  | { type: "REMOVE_CUSTOM_PAGE"; page: CustomPageKey };
+
+const WIDGET_LABELS: Record<DashboardWidgetKey, string> = {
+  "supplier-insights": "Supplier Insights",
+  "delivery-timeline": "Delivery Timeline",
+  "pending-requests": "Pending Stock Requests",
+  "po-status-breakdown": "PO Status Breakdown",
+  "critical-materials": "Critical Materials",
+};
+
+const PAGE_LABELS: Record<CustomPageKey, string> = {
+  "low-stock": "Low Stock",
+};
 
 let idCounter = 10000;
 function nextId(prefix: string) {
@@ -360,19 +377,29 @@ function reducer(state: State, action: Action): State {
       const replyMsg: AssistantMessage = { id: nextId("MSG"), role: "assistant", text: action.text };
       const withoutLoading = state.assistantMessages.filter((m) => m.id !== "MSG-LOADING");
       let dashboardWidgets = state.dashboardWidgets;
+      let customPages = state.customPages;
       let auditLog = state.auditLog;
       if (action.addWidget && !dashboardWidgets.includes(action.addWidget)) {
         dashboardWidgets = [...dashboardWidgets, action.addWidget];
-        auditLog = pushAudit(auditLog, `AI Assistant added "Supplier Insights" widget to Dashboard`);
+        auditLog = pushAudit(auditLog, `AI Assistant added "${WIDGET_LABELS[action.addWidget]}" widget to Dashboard`);
       }
       if (action.removeWidget) {
         dashboardWidgets = dashboardWidgets.filter((w) => w !== action.removeWidget);
-        auditLog = pushAudit(auditLog, `AI Assistant removed "Supplier Insights" widget from Dashboard`);
+        auditLog = pushAudit(auditLog, `AI Assistant removed "${WIDGET_LABELS[action.removeWidget]}" widget from Dashboard`);
+      }
+      if (action.addPage && !customPages.includes(action.addPage)) {
+        customPages = [...customPages, action.addPage];
+        auditLog = pushAudit(auditLog, `AI Assistant created a new "${PAGE_LABELS[action.addPage]}" page`);
+      }
+      if (action.removePage) {
+        customPages = customPages.filter((p) => p !== action.removePage);
+        auditLog = pushAudit(auditLog, `AI Assistant removed the "${PAGE_LABELS[action.removePage]}" page`);
       }
       return {
         ...state,
         assistantMessages: [...withoutLoading, replyMsg],
         dashboardWidgets,
+        customPages,
         auditLog,
       };
     }
@@ -389,6 +416,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, activeSupplyRequest: null };
     case "REMOVE_DASHBOARD_WIDGET":
       return { ...state, dashboardWidgets: state.dashboardWidgets.filter((w) => w !== action.widget) };
+    case "REMOVE_CUSTOM_PAGE":
+      return { ...state, customPages: state.customPages.filter((p) => p !== action.page) };
     default:
       return state;
   }
@@ -413,6 +442,7 @@ const initialState: State = {
     },
   ],
   dashboardWidgets: [],
+  customPages: [],
   activeSupplyRequest: null,
 };
 
