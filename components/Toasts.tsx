@@ -4,18 +4,18 @@ import React, { useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { IconCheck, IconX, IconAlert } from "./icons";
 
-const styles: Record<string, string> = {
-  success: "bg-emerald-600",
-  error: "bg-rose-600",
-  warning: "bg-amber-600",
-  info: "bg-slate-800",
+const dot: Record<string, string> = {
+  success: "var(--color-emerald)",
+  error: "var(--color-rose)",
+  warning: "var(--color-amber)",
+  info: "var(--color-brand)",
 };
 
 const icons: Record<string, React.ReactNode> = {
-  success: <IconCheck className="shrink-0" width={16} height={16} />,
-  error: <IconAlert className="shrink-0" width={16} height={16} />,
-  warning: <IconAlert className="shrink-0" width={16} height={16} />,
-  info: <IconAlert className="shrink-0" width={16} height={16} />,
+  success: <IconCheck className="shrink-0" width={15} height={15} />,
+  error: <IconAlert className="shrink-0" width={15} height={15} />,
+  warning: <IconAlert className="shrink-0" width={15} height={15} />,
+  info: <IconAlert className="shrink-0" width={15} height={15} />,
 };
 
 function ToastItem({ id, type, message }: { id: string; type: string; message: string }) {
@@ -27,17 +27,17 @@ function ToastItem({ id, type, message }: { id: string; type: string; message: s
   }, [id, dispatch]);
 
   return (
-    <div
-      className={`${styles[type]} text-white rounded-lg shadow-lg px-4 py-3 flex items-start gap-2.5 min-w-[280px] max-w-sm animate-[fadeIn_0.2s_ease-out]`}
-    >
-      {icons[type]}
-      <p className="text-sm leading-snug flex-1">{message}</p>
+    <div className="flex items-start gap-2.5 rounded-xl border border-[var(--color-line)] bg-[var(--color-surface)] px-4 py-3.5 shadow-[0_16px_40px_-12px_rgba(18,21,28,0.25)] min-w-[280px] max-w-sm">
+      <span className="mt-0.5" style={{ color: dot[type] }}>
+        {icons[type]}
+      </span>
+      <p className="text-sm leading-snug flex-1 text-[var(--color-ink)]">{message}</p>
       <button
         onClick={() => dispatch({ type: "DISMISS_TOAST", toastId: id })}
-        className="opacity-70 hover:opacity-100 shrink-0"
+        className="text-[var(--color-subtle)] hover:text-[var(--color-ink)] shrink-0 transition-colors"
         aria-label="Dismiss"
       >
-        <IconX width={14} height={14} />
+        <IconX width={13} height={13} />
       </button>
     </div>
   );

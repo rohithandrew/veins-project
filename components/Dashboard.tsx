@@ -2,8 +2,7 @@
 
 import React from "react";
 import { useStore } from "@/lib/store";
-import type { ViewKey } from "@/lib/types";
-import type { DashboardWidgetKey } from "@/lib/types";
+import type { ViewKey, DashboardWidgetKey } from "@/lib/types";
 import { POStatusBadge, StockStatusBadge } from "./StatusBadge";
 import { SupplierInsightsWidget } from "./SupplierInsightsWidget";
 import { DeliveryTimelineWidget } from "./DeliveryTimelineWidget";
@@ -24,22 +23,21 @@ function KpiCard({
   label,
   value,
   icon: Icon,
-  accent,
+  accentColor,
 }: {
   label: string;
   value: React.ReactNode;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
-  accent: string;
+  accentColor: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${accent}`}>
-          <Icon width={18} height={18} />
-        </div>
+    <div className="hairline-card relative overflow-hidden p-5">
+      <span className="absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: accentColor }} />
+      <div className="flex items-start justify-between">
+        <p className="text-[12.5px] font-medium uppercase tracking-wide text-[var(--color-subtle)]">{label}</p>
+        <Icon width={16} height={16} style={{ color: accentColor }} className="shrink-0 mt-0.5" />
       </div>
-      <p className="mt-3 text-2xl font-semibold text-slate-900">{value}</p>
+      <p className="mt-3 font-display text-[2.25rem] leading-none font-medium text-[var(--color-ink)]">{value}</p>
     </div>
   );
 }
@@ -53,12 +51,12 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: ViewKey) => void }) 
   const healthyPct = Math.round(((materials.length - lowStock.length) / materials.length) * 100);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Purchase Orders" value={purchaseOrders.length} icon={IconFactory} accent="bg-blue-50 text-blue-600" />
-        <KpiCard label="Pending Requests" value={pendingRequests} icon={IconBox} accent="bg-amber-50 text-amber-600" />
-        <KpiCard label="Low Stock Alerts" value={lowStock.length} icon={IconAlert} accent="bg-rose-50 text-rose-600" />
-        <KpiCard label="Total Suppliers" value={suppliers.length} icon={IconUsers} accent="bg-emerald-50 text-emerald-600" />
+        <KpiCard label="Total Purchase Orders" value={purchaseOrders.length} icon={IconFactory} accentColor="var(--color-brand)" />
+        <KpiCard label="Pending Requests" value={pendingRequests} icon={IconBox} accentColor="var(--color-amber)" />
+        <KpiCard label="Low Stock Alerts" value={lowStock.length} icon={IconAlert} accentColor="var(--color-rose)" />
+        <KpiCard label="Total Suppliers" value={suppliers.length} icon={IconUsers} accentColor="var(--color-emerald)" />
       </div>
 
       {dashboardWidgets.length > 0 && (
@@ -71,24 +69,24 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: ViewKey) => void }) 
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="hairline-card lg:col-span-2 p-5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800">Recent Purchase Orders</h2>
+            <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">Recent Purchase Orders</h2>
             <button
               onClick={() => onNavigate("production")}
-              className="flex items-center gap-1 text-xs font-medium text-blue-700 hover:underline"
+              className="flex items-center gap-1 text-xs font-medium text-[var(--color-brand)] hover:underline"
             >
-              View all <IconChevronRight width={13} height={13} />
+              View all <IconChevronRight width={12} height={12} />
             </button>
           </div>
-          <div className="mt-3 divide-y divide-slate-100">
+          <div className="mt-2 divide-y divide-[var(--color-line-soft)]">
             {purchaseOrders.map((po) => (
-              <div key={po.id} className="flex items-center justify-between py-3">
+              <div key={po.id} className="flex items-center justify-between py-3.5">
                 <div>
-                  <p className="text-sm font-medium text-slate-800">
-                    {po.poNumber} · {po.clientName}
+                  <p className="text-sm font-medium text-[var(--color-ink)]">
+                    {po.poNumber} <span className="text-[var(--color-subtle)] font-normal">· {po.clientName}</span>
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-[var(--color-subtle)] mt-0.5">
                     {po.kits.length} kit(s) · Delivery {po.deliveryDate}
                   </p>
                 </div>
@@ -98,53 +96,60 @@ export function Dashboard({ onNavigate }: { onNavigate: (v: ViewKey) => void }) 
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="text-sm font-semibold text-slate-800">Stock Health</h2>
+        <div className="hairline-card p-5">
+          <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">Stock Health</h2>
           <div className="mt-4 flex items-center gap-4">
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
-              <span className="text-lg font-semibold text-slate-800">{healthyPct}%</span>
+            <div
+              className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full"
+              style={{
+                background: `conic-gradient(var(--color-brand) ${healthyPct * 3.6}deg, var(--color-line-soft) 0deg)`,
+              }}
+            >
+              <div className="flex h-[56px] w-[56px] items-center justify-center rounded-full bg-[var(--color-surface)]">
+                <span className="font-display text-base font-medium text-[var(--color-ink)]">{healthyPct}%</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 space-y-1">
+            <div className="text-xs text-[var(--color-muted)] space-y-1.5">
               <p>
-                <span className="font-semibold text-slate-800">{materials.length}</span> materials tracked
+                <span className="font-semibold text-[var(--color-ink)]">{materials.length}</span> materials tracked
               </p>
               <p>
-                <span className="font-semibold text-slate-800">{totalStockUnits.toLocaleString()}</span> total units in stock
+                <span className="font-semibold text-[var(--color-ink)]">{totalStockUnits.toLocaleString()}</span> total units
               </p>
               <p>
-                <span className="font-semibold text-rose-600">{lowStock.length}</span> below reorder point
+                <span className="font-semibold text-[var(--color-rose)]">{lowStock.length}</span> below reorder point
               </p>
             </div>
           </div>
           <button
             onClick={() => onNavigate("inventory")}
-            className="mt-4 w-full rounded-lg bg-slate-900 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+            className="mt-4 w-full rounded-lg py-2.5 text-xs font-semibold text-white transition-transform hover:-translate-y-px brand-gradient shadow-[0_4px_14px_-4px_rgba(29,79,216,0.4)]"
           >
             Go to Inventory
           </button>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-slate-800">Low Stock Snapshot</h2>
+      <div className="hairline-card p-5">
+        <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">Low Stock Snapshot</h2>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-400">
+              <tr className="text-left text-[11px] uppercase tracking-wide text-[var(--color-subtle)]">
                 <th className="pb-2 font-medium">Material</th>
                 <th className="pb-2 font-medium">Current Stock</th>
                 <th className="pb-2 font-medium">Reorder Point</th>
                 <th className="pb-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--color-line-soft)]">
               {materials.map((m) => (
                 <tr key={m.id}>
-                  <td className="py-2.5 text-slate-700">{m.name}</td>
-                  <td className="py-2.5 text-slate-600">
+                  <td className="py-2.5 text-[var(--color-ink)]">{m.name}</td>
+                  <td className="py-2.5 text-[var(--color-muted)]">
                     {m.currentStock} {m.unit}
                   </td>
-                  <td className="py-2.5 text-slate-600">
+                  <td className="py-2.5 text-[var(--color-muted)]">
                     {m.reorderPoint} {m.unit}
                   </td>
                   <td className="py-2.5">

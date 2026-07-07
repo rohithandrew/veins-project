@@ -6,6 +6,7 @@ import type { PurchaseOrder } from "@/lib/types";
 import { POCard } from "./POCard";
 import { POStatusBadge } from "./StatusBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Button } from "./Button";
 import { IconClock, IconBox } from "./icons";
 
 function daysUntil(dateStr: string) {
@@ -38,80 +39,69 @@ function ProductionCard({ po }: { po: PurchaseOrder }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+    <div className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-surface)]">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-line-soft)] px-4 py-3.5">
         <div>
-          <p className="text-sm font-semibold text-slate-900">
+          <p className="text-sm font-semibold text-[var(--color-ink)]">
             {po.poNumber} · {po.clientName}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">{po.clientContact}</p>
+          <p className="text-xs text-[var(--color-subtle)] mt-0.5">{po.clientContact}</p>
         </div>
         <POStatusBadge status={po.status} context="production" />
       </div>
 
-      <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-b border-slate-50">
+      <div className="px-4 py-3.5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs border-b border-[var(--color-line-soft)]">
         <div>
-          <p className="text-slate-400">Kits</p>
-          <p className="font-semibold text-slate-700">{po.kits.length}</p>
+          <p className="text-[var(--color-subtle)]">Kits</p>
+          <p className="font-display text-base font-medium text-[var(--color-ink)]">{po.kits.length}</p>
         </div>
         <div>
-          <p className="text-slate-400">Components</p>
-          <p className="font-semibold text-slate-700">{totalComponents}</p>
+          <p className="text-[var(--color-subtle)]">Components</p>
+          <p className="font-display text-base font-medium text-[var(--color-ink)]">{totalComponents}</p>
         </div>
         <div>
-          <p className="text-slate-400">Raw Materials</p>
-          <p className="font-semibold text-slate-700">{bomItems.length}</p>
+          <p className="text-[var(--color-subtle)]">Raw Materials</p>
+          <p className="font-display text-base font-medium text-[var(--color-ink)]">{bomItems.length}</p>
         </div>
-        <div className="flex items-center gap-1">
-          <IconClock width={13} height={13} className="text-slate-400" />
+        <div className="flex items-center gap-1.5">
+          <IconClock width={12} height={12} className="text-[var(--color-subtle)]" />
           <div>
-            <p className="text-slate-400">Delivery</p>
-            <p className={`font-semibold ${days < 5 ? "text-rose-600" : "text-slate-700"}`}>
+            <p className="text-[var(--color-subtle)]">Delivery</p>
+            <p className={`font-medium ${days < 5 ? "text-[var(--color-rose)]" : "text-[var(--color-ink)]"}`}>
               {po.deliveryDate} {days >= 0 ? `(${days}d)` : "(overdue)"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="px-4 py-3">
+      <div className="px-4 py-3.5">
         <POCard po={po} compact />
       </div>
 
-      <div className="border-t border-slate-100 px-4 py-3 flex flex-wrap items-center gap-2">
-        <button
+      <div className="border-t border-[var(--color-line-soft)] px-4 py-3.5 flex flex-wrap items-center gap-2">
+        <Button
+          variant="primary"
+          size="sm"
           disabled={allRequested}
           onClick={() => setConfirmAction("raise")}
-          className={`rounded-lg px-3.5 py-2 text-xs font-semibold ${
-            allRequested
-              ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-              : "bg-blue-700 text-white hover:bg-blue-800"
-          }`}
         >
-          <span className="inline-flex items-center gap-1.5">
-            <IconBox width={13} height={13} />
-            {allRequested ? "Requests Raised" : "Raise Request"}
-          </span>
-        </button>
+          <IconBox width={13} height={13} />
+          {allRequested ? "Requests Raised" : "Raise Request"}
+        </Button>
 
         {po.status === "pending" && (
-          <button
-            onClick={() => setConfirmAction("start")}
-            className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
+          <Button variant="secondary" size="sm" onClick={() => setConfirmAction("start")}>
             Start Production
-          </button>
+          </Button>
         )}
         {po.status === "in_progress" && (
-          <button
-            onClick={() => setConfirmAction("complete")}
-            className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-          >
+          <Button variant="secondary" size="sm" onClick={() => setConfirmAction("complete")}>
             Mark Completed
-          </button>
+          </Button>
         )}
 
         {openRequests.length > 0 && (
-          <span className="text-xs text-slate-400 ml-auto">
+          <span className="text-xs text-[var(--color-subtle)] ml-auto">
             {openRequests.filter((r) => r.status === "accepted").length}/{openRequests.length} requests fulfilled
           </span>
         )}
@@ -158,7 +148,7 @@ export function Production() {
   return (
     <div className="space-y-4">
       {visible.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-400">
+        <div className="rounded-2xl border border-dashed border-[var(--color-line)] bg-[var(--color-surface)] p-8 text-center text-sm text-[var(--color-subtle)]">
           No POs in production yet. Move a PO to production from the PO Upload page.
         </div>
       )}

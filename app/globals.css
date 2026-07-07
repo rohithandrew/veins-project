@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf9f6;
+  --foreground: #12151c;
 }
 
 @theme inline {
@@ -10,17 +10,80 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+
+  /* Neutral ink scale — warm near-black, not generic slate */
+  --color-ink: #12151c;
+  --color-ink-2: #20242f;
+  --color-paper: #faf9f6;
+  --color-surface: #ffffff;
+  --color-line: #e7e4dc;
+  --color-line-soft: #efece4;
+  --color-muted: #6b6f7a;
+  --color-subtle: #8f93a0;
+
+  /* Brand — derived from the Vijaya Electronics logo gradient */
+  --color-brand: #1d4fd8;
+  --color-brand-deep: #142a80;
+  --color-brand-cyan: #2fd0ee;
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dde9ff;
+
+  /* Semantic accents, tuned to sit with the brand palette */
+  --color-amber: #b45309;
+  --color-amber-50: #fdf6ec;
+  --color-emerald: #0f7a5c;
+  --color-emerald-50: #ecf7f2;
+  --color-rose: #c81e4b;
+  --color-rose-50: #fdeef2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #faf9f6;
+    --foreground: #12151c;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-deep);
+}
+
+.brand-gradient {
+  background-image: linear-gradient(120deg, var(--color-brand-cyan) 0%, var(--color-brand) 65%, var(--color-brand-deep) 100%);
+}
+
+.brand-gradient-text {
+  background-image: linear-gradient(120deg, var(--color-brand-cyan) 0%, var(--color-brand) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.paper-grain {
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(29, 79, 216, 0.06), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(47, 208, 238, 0.05), transparent 45%);
+}
+
+.hairline-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
 }

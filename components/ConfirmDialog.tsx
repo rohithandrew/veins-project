@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "./Button";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -22,25 +23,17 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 px-4">
-      <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-2xl">
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        <p className="mt-2 text-sm text-slate-600">{description}</p>
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--color-ink)]/45 backdrop-blur-[2px] px-4">
+      <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-5 shadow-[0_24px_60px_-16px_rgba(18,21,28,0.35)]">
+        <h3 className="font-display text-lg font-medium text-[var(--color-ink)]">{title}</h3>
+        <p className="mt-2 text-sm text-[var(--color-muted)] leading-relaxed">{description}</p>
         <div className="mt-5 flex justify-end gap-2">
-          <button
-            onClick={onCancel}
-            className="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
+          <Button variant="secondary" onClick={onCancel}>
             Cancel
-          </button>
-          <button
-            onClick={onConfirm}
-            className={`rounded-lg px-3.5 py-2 text-sm font-medium text-white ${
-              tone === "danger" ? "bg-rose-600 hover:bg-rose-700" : "bg-blue-700 hover:bg-blue-800"
-            }`}
-          >
+          </Button>
+          <Button variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm}>
             {confirmLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

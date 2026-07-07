@@ -20,11 +20,11 @@ function AppShell() {
   const [view, setView] = useState<ViewKey>("dashboard");
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50">
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--color-paper)] paper-grain">
       <Sidebar current={view} onNavigate={setView} />
       <div className="flex flex-1 flex-col min-w-0">
         <Topbar current={view} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-5 md:p-8">
           <GlobalLowStockBar />
           {view === "dashboard" && <Dashboard onNavigate={setView} />}
           {view === "po-upload" && <POUpload />}

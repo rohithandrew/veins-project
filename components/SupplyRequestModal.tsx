@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
 import type { SupplyRequest } from "@/lib/types";
+import { Button } from "./Button";
 import { IconMail, IconSend, IconX } from "./icons";
 
 function addDays(days: number) {
@@ -60,78 +61,64 @@ Regards,
 Inventory Team
 Vijaya Electronics`;
 
+  const inputClass =
+    "mt-1 w-full rounded-lg border border-[var(--color-line)] px-2.5 py-2 text-sm outline-none focus:border-[var(--color-brand)] focus:ring-2 focus:ring-[var(--color-brand-100)] transition-shadow";
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 px-4 py-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--color-ink)]/45 backdrop-blur-[2px] px-4 py-8 overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-2xl bg-[var(--color-surface)] shadow-[0_24px_60px_-16px_rgba(18,21,28,0.4)]">
+        <div className="flex items-center justify-between border-b border-[var(--color-line-soft)] px-5 py-4">
           <div className="flex items-center gap-2">
-            <IconMail width={18} height={18} className="text-blue-600" />
-            <h3 className="text-sm font-semibold text-slate-900">Supply Request Email</h3>
+            <IconMail width={17} height={17} className="text-[var(--color-brand)]" />
+            <h3 className="font-display text-base font-medium text-[var(--color-ink)]">Supply Request Email</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <IconX width={18} height={18} />
+          <button onClick={onClose} className="text-[var(--color-subtle)] hover:text-[var(--color-ink)] transition-colors">
+            <IconX width={17} height={17} />
           </button>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600 grid grid-cols-2 gap-2">
-            <p><span className="text-slate-400">Company:</span> <span className="font-medium text-slate-700">{supplier.companyName}</span></p>
-            <p><span className="text-slate-400">Contact:</span> <span className="font-medium text-slate-700">{supplier.contactPerson}</span></p>
-            <p><span className="text-slate-400">Phone:</span> <span className="font-medium text-slate-700">{supplier.phone}</span></p>
-            <p><span className="text-slate-400">Rating:</span> <span className="font-medium text-slate-700">{supplier.rating.toFixed(1)} / 5</span></p>
+        <div className="max-h-[70vh] overflow-y-auto scrollbar-thin px-5 py-4 space-y-4">
+          <div className="rounded-xl border border-[var(--color-line)] bg-[var(--color-paper)] p-3.5 text-xs text-[var(--color-muted)] grid grid-cols-2 gap-2">
+            <p><span className="text-[var(--color-subtle)]">Company:</span> <span className="font-medium text-[var(--color-ink)]">{supplier.companyName}</span></p>
+            <p><span className="text-[var(--color-subtle)]">Contact:</span> <span className="font-medium text-[var(--color-ink)]">{supplier.contactPerson}</span></p>
+            <p><span className="text-[var(--color-subtle)]">Phone:</span> <span className="font-medium text-[var(--color-ink)]">{supplier.phone}</span></p>
+            <p><span className="text-[var(--color-subtle)]">Rating:</span> <span className="font-medium text-[var(--color-ink)]">{supplier.rating.toFixed(1)} / 5</span></p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-[var(--color-muted)]">
               Quantity Required
-              <input
-                type="number"
-                min={1}
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
+              <input type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value))} className={inputClass} />
             </label>
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-[var(--color-muted)]">
               Urgency
-              <select
-                value={urgency}
-                onChange={(e) => setUrgency(e.target.value as SupplyRequest["urgency"])}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              >
+              <select value={urgency} onChange={(e) => setUrgency(e.target.value as SupplyRequest["urgency"])} className={inputClass}>
                 <option>Normal</option>
                 <option>Urgent</option>
                 <option>Critical</option>
               </select>
             </label>
-            <label className="text-xs font-medium text-slate-600">
+            <label className="text-xs font-medium text-[var(--color-muted)]">
               Requested Delivery
-              <input
-                type="date"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-              />
+              <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className={inputClass} />
             </label>
           </div>
 
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <div className="bg-slate-50 px-3.5 py-2 text-xs text-slate-500 space-y-1 border-b border-slate-200">
-              <p><span className="text-slate-400">To:</span> {supplier.email}</p>
-              <p><span className="text-slate-400">Subject:</span> {subject}</p>
+          <div className="rounded-xl border border-[var(--color-line)] overflow-hidden">
+            <div className="bg-[var(--color-paper)] px-3.5 py-2.5 text-xs text-[var(--color-muted)] space-y-1 border-b border-[var(--color-line)]">
+              <p><span className="text-[var(--color-subtle)]">To:</span> {supplier.email}</p>
+              <p><span className="text-[var(--color-subtle)]">Subject:</span> {subject}</p>
             </div>
-            <pre className="whitespace-pre-wrap px-3.5 py-3 text-xs text-slate-700 font-sans leading-relaxed">{body}</pre>
+            <pre className="whitespace-pre-wrap px-3.5 py-3 text-xs text-[var(--color-ink)] font-sans leading-relaxed">{body}</pre>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 px-5 py-3.5">
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
+        <div className="flex justify-end gap-2 border-t border-[var(--color-line-soft)] px-5 py-4">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="primary"
             onClick={() => {
               dispatch({
                 type: "SEND_SUPPLY_REQUEST",
@@ -143,11 +130,10 @@ Vijaya Electronics`;
               });
               onClose();
             }}
-            className="flex items-center gap-1.5 rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-medium text-white hover:bg-blue-800"
           >
             <IconSend width={14} height={14} />
             Send Email
-          </button>
+          </Button>
         </div>
       </div>
     </div>
