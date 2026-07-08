@@ -5,16 +5,24 @@ import { useStore } from "@/lib/store";
 import { generateReply } from "@/lib/assistant";
 import { IconSparkles, IconSend } from "./icons";
 
-const SUGGESTIONS = [
+const BOOTSTRAP_SUGGESTIONS = [
+  "Build me a dashboard",
+  "Add a PO upload page",
+  "Add a production tracking page",
+  "Add an inventory management page",
+  "Add a supplier dashboard page",
+];
+
+const ADVANCED_SUGGESTIONS = [
   "Which materials are low on stock?",
   "Status of PO-002",
   "Add supplier dashboard insight to the main dashboard",
   "Add delivery timeline to dashboard",
-  "Add PO status breakdown to dashboard",
+  "Add a new page for just displaying the stocks which are low",
 ];
 
 export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel" }) {
-  const { assistantMessages, materials, suppliers, purchaseOrders, stockRequests, supplyRequests, dispatch } = useStore();
+  const { assistantMessages, materials, suppliers, purchaseOrders, stockRequests, supplyRequests, unlockedPages, dispatch } = useStore();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +35,7 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
     if (!trimmed) return;
     dispatch({ type: "ASSISTANT_ASK", text: trimmed });
     setInput("");
-    const reply = generateReply(trimmed, { materials, suppliers, purchaseOrders, stockRequests, supplyRequests });
+    const reply = generateReply(trimmed, { materials, suppliers, purchaseOrders, stockRequests, supplyRequests, unlockedPages });
     setTimeout(() => {
       dispatch({
         type: "ASSISTANT_REPLY",
@@ -36,11 +44,14 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
         removeWidget: reply.removeWidget,
         addPage: reply.addPage,
         removePage: reply.removePage,
+        unlockPage: reply.unlockPage,
+        navigateTo: reply.navigateTo,
       });
     }, reply.delayMs);
   }
 
   const heightClass = variant === "page" ? "h-[70vh]" : "h-[28rem]";
+  const suggestions = unlockedPages.length === 0 ? BOOTSTRAP_SUGGESTIONS : ADVANCED_SUGGESTIONS;
 
   return (
     <div className={`flex flex-col bg-[var(--color-surface)] ${heightClass} ${variant === "page" ? "rounded-2xl border border-[var(--color-line)]" : ""}`}>
@@ -51,7 +62,7 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--color-ink)]">Vijaya AI Assistant</p>
-            <p className="text-[11px] text-[var(--color-subtle)]">Ask about stock, POs, suppliers — or customize your dashboard</p>
+            <p className="text-[11px] text-[var(--color-subtle)]">Ask about stock, POs, suppliers — or tell me what to build</p>
           </div>
         </div>
       )}
@@ -84,7 +95,7 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
 
       <div className="border-t border-[var(--color-line-soft)] p-3">
         <div className="flex flex-wrap gap-1.5 mb-2">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <button
               key={s}
               onClick={() => handleSend(s)}

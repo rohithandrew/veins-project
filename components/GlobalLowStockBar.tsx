@@ -5,11 +5,11 @@ import { useStore } from "@/lib/store";
 import { IconAlert, IconX, IconChevronRight } from "./icons";
 
 export function GlobalLowStockBar() {
-  const { materials, dispatch } = useStore();
+  const { materials, unlockedPages, dispatch } = useStore();
   const [dismissed, setDismissed] = useState(false);
   const lowStock = materials.filter((m) => m.currentStock <= m.reorderPoint);
 
-  if (lowStock.length === 0 || dismissed) return null;
+  if (unlockedPages.length === 0 || lowStock.length === 0 || dismissed) return null;
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-[var(--color-amber-50)] bg-[var(--color-amber-50)] px-4 py-2.5 mb-4">

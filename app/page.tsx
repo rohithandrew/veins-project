@@ -18,14 +18,26 @@ import { GlobalLowStockBar } from "@/components/GlobalLowStockBar";
 import { SupplyRequestModal } from "@/components/SupplyRequestModal";
 
 function AppShell() {
-  const [view, setView] = useState<ViewKey>("dashboard");
-  const { customPages } = useStore();
+  const [view, setView] = useState<ViewKey>("assistant");
+  const { customPages, unlockedPages, pendingNavigation, dispatch } = useStore();
 
   useEffect(() => {
     if (view === "low-stock" && !customPages.includes("low-stock")) {
-      setView("dashboard");
+      setView("assistant");
+      return;
     }
-  }, [view, customPages]);
+    const corePages: ViewKey[] = ["dashboard", "po-upload", "production", "inventory", "supplier"];
+    if (corePages.includes(view) && !unlockedPages.includes(view as (typeof unlockedPages)[number])) {
+      setView("assistant");
+    }
+  }, [view, customPages, unlockedPages]);
+
+  useEffect(() => {
+    if (pendingNavigation) {
+      setView(pendingNavigation);
+      dispatch({ type: "CLEAR_PENDING_NAVIGATION" });
+    }
+  }, [pendingNavigation, dispatch]);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--color-paper)] paper-grain">
@@ -34,11 +46,11 @@ function AppShell() {
         <Topbar current={view} />
         <main className="flex-1 overflow-y-auto p-5 md:p-8">
           <GlobalLowStockBar />
-          {view === "dashboard" && <Dashboard onNavigate={setView} />}
-          {view === "po-upload" && <POUpload />}
-          {view === "production" && <Production />}
-          {view === "inventory" && <Inventory />}
-          {view === "supplier" && <SupplierDashboard />}
+          {view === "dashboard" && unlockedPages.includes("dashboard") && <Dashboard onNavigate={setView} />}
+          {view === "po-upload" && unlockedPages.includes("po-upload") && <POUpload />}
+          {view === "production" && unlockedPages.includes("production") && <Production />}
+          {view === "inventory" && unlockedPages.includes("inventory") && <Inventory />}
+          {view === "supplier" && unlockedPages.includes("supplier") && <SupplierDashboard />}
           {view === "assistant" && <AssistantPage />}
           {view === "low-stock" && customPages.includes("low-stock") && <LowStockPage onNavigate={setView} />}
         </main>

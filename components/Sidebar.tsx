@@ -3,10 +3,10 @@
 import React from "react";
 import Image from "next/image";
 import { useStore } from "@/lib/store";
-import type { ViewKey, CustomPageKey } from "@/lib/types";
+import type { ViewKey, CustomPageKey, CorePageKey } from "@/lib/types";
 import { IconDashboard, IconUpload, IconFactory, IconBox, IconTruck, IconSparkles, IconAlert } from "./icons";
 
-const items: { key: ViewKey; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
+const items: { key: CorePageKey; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }[] = [
   { key: "dashboard", label: "Dashboard", icon: IconDashboard },
   { key: "po-upload", label: "PO Upload & Processing", icon: IconUpload },
   { key: "production", label: "Production", icon: IconFactory },
@@ -53,7 +53,8 @@ function NavButton({
 }
 
 export function Sidebar({ current, onNavigate }: { current: ViewKey; onNavigate: (v: ViewKey) => void }) {
-  const { customPages } = useStore();
+  const { customPages, unlockedPages } = useStore();
+  const visibleItems = items.filter((i) => unlockedPages.includes(i.key));
 
   return (
     <aside
@@ -71,12 +72,16 @@ export function Sidebar({ current, onNavigate }: { current: ViewKey; onNavigate:
       </div>
 
       <nav className="flex-1 px-3.5 pt-3">
-        <p className="px-2.5 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/25">Workspace</p>
-        <div className="space-y-0.5">
-          {items.map(({ key, label, icon: Icon }) => (
-            <NavButton key={key} active={current === key} icon={Icon} label={label} onClick={() => onNavigate(key)} />
-          ))}
-        </div>
+        {visibleItems.length > 0 && (
+          <>
+            <p className="px-2.5 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/25">Workspace</p>
+            <div className="space-y-0.5">
+              {visibleItems.map(({ key, label, icon: Icon }) => (
+                <NavButton key={key} active={current === key} icon={Icon} label={label} onClick={() => onNavigate(key)} />
+              ))}
+            </div>
+          </>
+        )}
 
         {customPages.length > 0 && (
           <>

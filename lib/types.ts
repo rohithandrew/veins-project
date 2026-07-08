@@ -116,14 +116,9 @@ export interface Toast {
 
 export type CustomPageKey = "low-stock";
 
-export type ViewKey =
-  | "dashboard"
-  | "po-upload"
-  | "production"
-  | "inventory"
-  | "supplier"
-  | "assistant"
-  | CustomPageKey;
+export type CorePageKey = "dashboard" | "po-upload" | "production" | "inventory" | "supplier";
+
+export type ViewKey = CorePageKey | "assistant" | CustomPageKey;
 
 export type DashboardWidgetKey =
   | "supplier-insights"

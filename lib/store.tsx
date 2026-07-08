@@ -15,6 +15,8 @@ import type {
   AssistantMessage,
   DashboardWidgetKey,
   CustomPageKey,
+  CorePageKey,
+  ViewKey,
 } from "./types";
 import {
   materials as seedMaterials,
@@ -41,6 +43,8 @@ interface State {
   assistantMessages: AssistantMessage[];
   dashboardWidgets: DashboardWidgetKey[];
   customPages: CustomPageKey[];
+  unlockedPages: CorePageKey[];
+  pendingNavigation: ViewKey | null;
   activeSupplyRequest: { materialId: string; qty?: number; linkedStockRequestId?: string } | null;
 }
 
@@ -70,6 +74,8 @@ type Action =
       removeWidget?: DashboardWidgetKey;
       addPage?: CustomPageKey;
       removePage?: CustomPageKey;
+      unlockPage?: CorePageKey;
+      navigateTo?: ViewKey;
     }
   | {
       type: "OPEN_SUPPLY_MODAL";
@@ -79,7 +85,8 @@ type Action =
     }
   | { type: "CLOSE_SUPPLY_MODAL" }
   | { type: "REMOVE_DASHBOARD_WIDGET"; widget: DashboardWidgetKey }
-  | { type: "REMOVE_CUSTOM_PAGE"; page: CustomPageKey };
+  | { type: "REMOVE_CUSTOM_PAGE"; page: CustomPageKey }
+  | { type: "CLEAR_PENDING_NAVIGATION" };
 
 const WIDGET_LABELS: Record<DashboardWidgetKey, string> = {
   "supplier-insights": "Supplier Insights",
@@ -91,6 +98,14 @@ const WIDGET_LABELS: Record<DashboardWidgetKey, string> = {
 
 const PAGE_LABELS: Record<CustomPageKey, string> = {
   "low-stock": "Low Stock",
+};
+
+const CORE_PAGE_LABELS: Record<CorePageKey, string> = {
+  dashboard: "Dashboard",
+  "po-upload": "PO Upload & Processing",
+  production: "Production",
+  inventory: "Inventory Management",
+  supplier: "Supplier Dashboard",
 };
 
 let idCounter = 10000;
@@ -378,6 +393,7 @@ function reducer(state: State, action: Action): State {
       const withoutLoading = state.assistantMessages.filter((m) => m.id !== "MSG-LOADING");
       let dashboardWidgets = state.dashboardWidgets;
       let customPages = state.customPages;
+      let unlockedPages = state.unlockedPages;
       let auditLog = state.auditLog;
       if (action.addWidget && !dashboardWidgets.includes(action.addWidget)) {
         dashboardWidgets = [...dashboardWidgets, action.addWidget];
@@ -395,11 +411,17 @@ function reducer(state: State, action: Action): State {
         customPages = customPages.filter((p) => p !== action.removePage);
         auditLog = pushAudit(auditLog, `AI Assistant removed the "${PAGE_LABELS[action.removePage]}" page`);
       }
+      if (action.unlockPage && !unlockedPages.includes(action.unlockPage)) {
+        unlockedPages = [...unlockedPages, action.unlockPage];
+        auditLog = pushAudit(auditLog, `AI Assistant built the "${CORE_PAGE_LABELS[action.unlockPage]}" page`);
+      }
       return {
         ...state,
         assistantMessages: [...withoutLoading, replyMsg],
         dashboardWidgets,
         customPages,
+        unlockedPages,
+        pendingNavigation: action.navigateTo ?? state.pendingNavigation,
         auditLog,
       };
     }
@@ -418,6 +440,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, dashboardWidgets: state.dashboardWidgets.filter((w) => w !== action.widget) };
     case "REMOVE_CUSTOM_PAGE":
       return { ...state, customPages: state.customPages.filter((p) => p !== action.page) };
+    case "CLEAR_PENDING_NAVIGATION":
+      return { ...state, pendingNavigation: null };
     default:
       return state;
   }
@@ -438,11 +462,13 @@ const initialState: State = {
       id: "MSG-0",
       role: "assistant",
       text:
-        "Hi Admin, I'm the Vijaya Electronics AI Assistant. Ask me about stock levels, PO status, suppliers, or tell me to customize this dashboard — e.g. \"add supplier dashboard insight to the main dashboard\".",
+        "Hi Admin, welcome to Vijaya Electronics. This workspace is empty right now — I'll build each page live as you ask for it. Try: \"Build me a dashboard\" to get started.",
     },
   ],
   dashboardWidgets: [],
   customPages: [],
+  unlockedPages: [],
+  pendingNavigation: null,
   activeSupplyRequest: null,
 };
 
