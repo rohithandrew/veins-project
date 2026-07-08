@@ -5,14 +5,19 @@ import { useStore } from "@/lib/store";
 import { RequestStatusBadge, StockStatusBadge, Badge } from "./StatusBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Button } from "./Button";
-import { IconAlert, IconCheck, IconX, IconBox } from "./icons";
+import { IconAlert, IconCheck, IconX, IconBox, IconSparkles } from "./icons";
 
 type SectionKey = "overview" | "requests" | "alerts";
 
 export function Inventory() {
-  const { materials, suppliers, stockRequests, inwardRecords, outwardRecords, dispatch } = useStore();
+  const { materials, suppliers, stockRequests, inwardRecords, outwardRecords, activePageFeatures, dispatch } = useStore();
   const [section, setSection] = useState<SectionKey>("overview");
   const [confirm, setConfirm] = useState<{ type: "accept" | "reject"; requestId: string } | null>(null);
+
+  const highlightCritical = activePageFeatures.includes("inventory-highlight-critical");
+  const stockTableMaterials = highlightCritical
+    ? [...materials].sort((a, b) => a.currentStock / a.reorderPoint - b.currentStock / b.reorderPoint)
+    : materials;
 
   const lowStock = materials.filter((m) => m.currentStock <= m.reorderPoint);
   const atRisk = materials.filter((m) => m.currentStock <= m.reorderPoint * 0.6);
@@ -60,7 +65,14 @@ export function Inventory() {
       {section === "overview" && (
         <div className="space-y-4">
           <div className="hairline-card p-5">
-            <h2 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)] mb-3">Current Stock Levels</h2>
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)] mb-3">
+              Current Stock Levels
+              {highlightCritical && (
+                <span className="flex items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)] normal-case tracking-normal">
+                  <IconSparkles width={9} height={9} /> AI: critical first
+                </span>
+              )}
+            </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -73,8 +85,8 @@ export function Inventory() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--color-line-soft)]">
-                  {materials.map((m) => (
-                    <tr key={m.id}>
+                  {stockTableMaterials.map((m) => (
+                    <tr key={m.id} className={highlightCritical && m.currentStock <= m.reorderPoint ? "bg-[var(--color-amber-50)]/60" : undefined}>
                       <td className="py-2.5 text-[var(--color-ink)]">{m.name}</td>
                       <td className="py-2.5 text-[var(--color-muted)]">{m.currentStock} {m.unit}</td>
                       <td className="py-2.5 text-[var(--color-muted)]">{m.reorderPoint} {m.unit}</td>

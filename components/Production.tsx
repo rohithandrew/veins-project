@@ -7,7 +7,7 @@ import { POCard } from "./POCard";
 import { POStatusBadge } from "./StatusBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Button } from "./Button";
-import { IconClock, IconBox } from "./icons";
+import { IconClock, IconBox, IconSparkles } from "./icons";
 
 function daysUntil(dateStr: string) {
   const target = new Date(dateStr).getTime();
@@ -142,17 +142,24 @@ function ProductionCard({ po }: { po: PurchaseOrder }) {
 }
 
 export function Production() {
-  const { purchaseOrders } = useStore();
+  const { purchaseOrders, activePageFeatures } = useStore();
+  const sortByUrgency = activePageFeatures.includes("production-sort-urgent");
   const visible = purchaseOrders.filter((po) => po.status !== "draft");
+  const ordered = sortByUrgency ? [...visible].sort((a, b) => daysUntil(a.deliveryDate) - daysUntil(b.deliveryDate)) : visible;
 
   return (
     <div className="space-y-4">
-      {visible.length === 0 && (
+      {sortByUrgency && (
+        <span className="flex w-fit items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)]">
+          <IconSparkles width={9} height={9} /> AI: sorted by delivery urgency
+        </span>
+      )}
+      {ordered.length === 0 && (
         <div className="rounded-2xl border border-dashed border-[var(--color-line)] bg-[var(--color-surface)] p-8 text-center text-sm text-[var(--color-subtle)]">
           No POs in production yet. Move a PO to production from the PO Upload page.
         </div>
       )}
-      {visible.map((po) => (
+      {ordered.map((po) => (
         <ProductionCard key={po.id} po={po} />
       ))}
     </div>

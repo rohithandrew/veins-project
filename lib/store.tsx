@@ -17,6 +17,7 @@ import type {
   CustomPageKey,
   CorePageKey,
   ViewKey,
+  PageFeatureKey,
 } from "./types";
 import {
   materials as seedMaterials,
@@ -44,6 +45,7 @@ interface State {
   dashboardWidgets: DashboardWidgetKey[];
   customPages: CustomPageKey[];
   unlockedPages: CorePageKey[];
+  activePageFeatures: PageFeatureKey[];
   pendingNavigation: ViewKey | null;
   activeSupplyRequest: { materialId: string; qty?: number; linkedStockRequestId?: string } | null;
 }
@@ -75,6 +77,8 @@ type Action =
       addPage?: CustomPageKey;
       removePage?: CustomPageKey;
       unlockPage?: CorePageKey;
+      addPageFeature?: PageFeatureKey;
+      removePageFeature?: PageFeatureKey;
       navigateTo?: ViewKey;
     }
   | {
@@ -106,6 +110,22 @@ const CORE_PAGE_LABELS: Record<CorePageKey, string> = {
   production: "Production",
   inventory: "Inventory Management",
   supplier: "Supplier Dashboard",
+};
+
+const PAGE_FEATURE_LABELS: Record<PageFeatureKey, string> = {
+  "inventory-highlight-critical": "Highlight Critical Materials",
+  "production-sort-urgent": "Sort by Delivery Urgency",
+  "po-upload-filter-active": "Filter to Active POs",
+  "supplier-sort-rating": "Sort by Rating",
+  "low-stock-sort-severity": "Sort by Severity",
+};
+
+const PAGE_FEATURE_PAGE_LABELS: Record<PageFeatureKey, string> = {
+  "inventory-highlight-critical": "Inventory",
+  "production-sort-urgent": "Production",
+  "po-upload-filter-active": "PO Upload & Processing",
+  "supplier-sort-rating": "Supplier Dashboard",
+  "low-stock-sort-severity": "Low Stock",
 };
 
 let idCounter = 10000;
@@ -394,6 +414,7 @@ function reducer(state: State, action: Action): State {
       let dashboardWidgets = state.dashboardWidgets;
       let customPages = state.customPages;
       let unlockedPages = state.unlockedPages;
+      let activePageFeatures = state.activePageFeatures;
       let auditLog = state.auditLog;
       if (action.addWidget && !dashboardWidgets.includes(action.addWidget)) {
         dashboardWidgets = [...dashboardWidgets, action.addWidget];
@@ -415,12 +436,27 @@ function reducer(state: State, action: Action): State {
         unlockedPages = [...unlockedPages, action.unlockPage];
         auditLog = pushAudit(auditLog, `AI Assistant built the "${CORE_PAGE_LABELS[action.unlockPage]}" page`);
       }
+      if (action.addPageFeature && !activePageFeatures.includes(action.addPageFeature)) {
+        activePageFeatures = [...activePageFeatures, action.addPageFeature];
+        auditLog = pushAudit(
+          auditLog,
+          `AI Assistant enabled "${PAGE_FEATURE_LABELS[action.addPageFeature]}" on ${PAGE_FEATURE_PAGE_LABELS[action.addPageFeature]}`
+        );
+      }
+      if (action.removePageFeature) {
+        activePageFeatures = activePageFeatures.filter((f) => f !== action.removePageFeature);
+        auditLog = pushAudit(
+          auditLog,
+          `AI Assistant reverted "${PAGE_FEATURE_LABELS[action.removePageFeature]}" on ${PAGE_FEATURE_PAGE_LABELS[action.removePageFeature]}`
+        );
+      }
       return {
         ...state,
         assistantMessages: [...withoutLoading, replyMsg],
         dashboardWidgets,
         customPages,
         unlockedPages,
+        activePageFeatures,
         pendingNavigation: action.navigateTo ?? state.pendingNavigation,
         auditLog,
       };
@@ -468,6 +504,7 @@ const initialState: State = {
   dashboardWidgets: [],
   customPages: [],
   unlockedPages: [],
+  activePageFeatures: [],
   pendingNavigation: null,
   activeSupplyRequest: null,
 };

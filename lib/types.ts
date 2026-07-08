@@ -127,6 +127,13 @@ export type DashboardWidgetKey =
   | "po-status-breakdown"
   | "critical-materials";
 
+export type PageFeatureKey =
+  | "inventory-highlight-critical"
+  | "production-sort-urgent"
+  | "po-upload-filter-active"
+  | "supplier-sort-rating"
+  | "low-stock-sort-severity";
+
 export interface AssistantMessage {
   id: string;
   role: "assistant" | "user";

@@ -5,11 +5,13 @@ import { useStore } from "@/lib/store";
 import { SupplyStatusBadge } from "./StatusBadge";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Button } from "./Button";
-import { IconUsers, IconCheck, IconX, IconClock } from "./icons";
+import { IconUsers, IconCheck, IconX, IconClock, IconSparkles } from "./icons";
 
 export function SupplierDashboard() {
-  const { suppliers, supplyRequests, materials, dispatch } = useStore();
+  const { suppliers, supplyRequests, materials, activePageFeatures, dispatch } = useStore();
   const [confirm, setConfirm] = useState<{ type: "accept" | "reject"; supplyId: string } | null>(null);
+  const sortByRating = activePageFeatures.includes("supplier-sort-rating");
+  const orderedSuppliers = sortByRating ? [...suppliers].sort((a, b) => b.rating - a.rating) : suppliers;
 
   function materialUnit(materialId: string) {
     return materials.find((m) => m.id === materialId)?.unit ?? "";
@@ -17,8 +19,13 @@ export function SupplierDashboard() {
 
   return (
     <div className="space-y-5">
+      {sortByRating && (
+        <span className="flex w-fit items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)]">
+          <IconSparkles width={9} height={9} /> AI: sorted by rating
+        </span>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {suppliers.map((s) => (
+        {orderedSuppliers.map((s) => (
           <div key={s.id} className="hairline-card p-5">
             <div className="flex items-center gap-3">
               <div

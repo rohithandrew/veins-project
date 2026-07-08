@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import type { ViewKey } from "@/lib/types";
 import { AssistantChat } from "./AssistantChat";
 import { IconSparkles, IconX } from "./icons";
 
-export function FloatingAssistant({ hidden }: { hidden?: boolean }) {
+export function FloatingAssistant({ hidden, page }: { hidden?: boolean; page: ViewKey }) {
   const [open, setOpen] = useState(false);
 
   if (hidden) return null;
@@ -22,7 +23,7 @@ export function FloatingAssistant({ hidden }: { hidden?: boolean }) {
               <IconX width={15} height={15} />
             </button>
           </div>
-          <AssistantChat variant="panel" />
+          <AssistantChat variant="panel" page={page} />
         </div>
       )}
 
