@@ -6,8 +6,12 @@ import { Button } from "./Button";
 import { IconAlert, IconSparkles, IconX } from "./icons";
 
 export function LowStockPage({ onNavigate }: { onNavigate: (v: ViewKey) => void }) {
-  const { materials, suppliers, dispatch } = useStore();
-  const lowStock = materials.filter((m) => m.currentStock <= m.reorderPoint);
+  const { materials, suppliers, activePageFeatures, dispatch } = useStore();
+  const sortBySeverity = activePageFeatures.includes("low-stock-sort-severity");
+  const lowStockUnsorted = materials.filter((m) => m.currentStock <= m.reorderPoint);
+  const lowStock = sortBySeverity
+    ? [...lowStockUnsorted].sort((a, b) => a.currentStock / a.reorderPoint - b.currentStock / b.reorderPoint)
+    : lowStockUnsorted;
 
   function supplierName(id: string) {
     return suppliers.find((s) => s.id === id)?.companyName ?? "—";
@@ -24,6 +28,11 @@ export function LowStockPage({ onNavigate }: { onNavigate: (v: ViewKey) => void 
             <span className="flex items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)]">
               <IconSparkles width={9} height={9} /> AI generated page
             </span>
+            {sortBySeverity && (
+              <span className="flex items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)]">
+                <IconSparkles width={9} height={9} /> AI: sorted by severity
+              </span>
+            )}
           </h2>
           <button
             onClick={() => {

@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { POCard } from "./POCard";
 import { IconSparkles, IconSend, IconUpload } from "./icons";
 
+
 interface ChatMessage {
   id: string;
   role: "assistant" | "user";
@@ -20,7 +21,9 @@ function mid() {
 }
 
 export function POUpload() {
-  const { purchaseOrders } = useStore();
+  const { purchaseOrders, activePageFeatures } = useStore();
+  const filterActive = activePageFeatures.includes("po-upload-filter-active");
+  const listedPOs = filterActive ? purchaseOrders.filter((po) => po.status !== "completed") : purchaseOrders;
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: mid(),
@@ -180,9 +183,16 @@ export function POUpload() {
           </div>
         </div>
         <div className="hairline-card p-4">
-          <h3 className="text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">All Purchase Orders</h3>
+          <h3 className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-[var(--color-muted)]">
+            All Purchase Orders
+            {filterActive && (
+              <span className="flex items-center gap-1 rounded-full bg-[var(--color-brand-50)] px-2 py-[3px] text-[10px] font-medium text-[var(--color-brand)] normal-case tracking-normal">
+                <IconSparkles width={9} height={9} /> AI: active only
+              </span>
+            )}
+          </h3>
           <div className="mt-2.5 space-y-2">
-            {purchaseOrders.map((po) => (
+            {listedPOs.map((po) => (
               <div key={po.id} className="flex items-center justify-between rounded-lg border border-[var(--color-line-soft)] px-3 py-2 text-xs">
                 <span className="font-medium text-[var(--color-ink)]">
                   {po.poNumber} · {po.clientName}

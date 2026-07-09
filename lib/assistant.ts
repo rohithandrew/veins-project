@@ -8,6 +8,7 @@ import type {
   CustomPageKey,
   CorePageKey,
   ViewKey,
+  PageFeatureKey,
 } from "./types";
 
 interface AssistantState {
@@ -17,6 +18,7 @@ interface AssistantState {
   stockRequests: StockRequest[];
   supplyRequests: SupplyRequest[];
   unlockedPages: CorePageKey[];
+  activePageFeatures: PageFeatureKey[];
 }
 
 export interface AssistantReply {
@@ -26,6 +28,8 @@ export interface AssistantReply {
   addPage?: CustomPageKey;
   removePage?: CustomPageKey;
   unlockPage?: CorePageKey;
+  addPageFeature?: PageFeatureKey;
+  removePageFeature?: PageFeatureKey;
   navigateTo?: ViewKey;
   delayMs: number;
 }
@@ -146,6 +150,159 @@ const WIDGET_INTENTS: WidgetIntent[] = [
   },
 ];
 
+interface PageFeatureIntent {
+  key: PageFeatureKey;
+  label: string;
+  page: ViewKey;
+  matches: (q: string) => boolean;
+  addDelayMs: number;
+  addText: string;
+}
+
+const PAGE_FEATURE_INTENTS: PageFeatureIntent[] = [
+  {
+    key: "inventory-highlight-critical",
+    label: "Highlight Critical Materials",
+    page: "inventory",
+    matches: (q) => q.includes("highlight") && (q.includes("critical") || q.includes("low stock") || q.includes("low-stock")),
+    addDelayMs: 1400,
+    addText: "Done — sorting critical materials to the top of the stock table and highlighting them.",
+  },
+  {
+    key: "production-sort-urgent",
+    label: "Sort by Delivery Urgency",
+    page: "production",
+    matches: (q) => (q.includes("sort") || q.includes("order")) && (q.includes("urgen") || q.includes("delivery") || q.includes("deadline")),
+    addDelayMs: 1400,
+    addText: "Done — reordering production cards so the nearest delivery deadlines show first.",
+  },
+  {
+    key: "po-upload-filter-active",
+    label: "Filter to Active POs",
+    page: "po-upload",
+    matches: (q) => q.includes("only pending") || q.includes("filter pending") || q.includes("only active") || (q.includes("filter") && q.includes("active")),
+    addDelayMs: 1300,
+    addText: "Done — filtering the purchase order list down to active (non-completed) POs.",
+  },
+  {
+    key: "supplier-sort-rating",
+    label: "Sort by Rating",
+    page: "supplier",
+    matches: (q) => q.includes("sort") && q.includes("rating") || q.includes("best supplier"),
+    addDelayMs: 1300,
+    addText: "Done — sorting suppliers by reliability rating, highest first.",
+  },
+  {
+    key: "low-stock-sort-severity",
+    label: "Sort by Severity",
+    page: "low-stock",
+    matches: (q) => q.includes("severity") || q.includes("most critical"),
+    addDelayMs: 1300,
+    addText: "Done — sorting the low stock list so the most critical materials show first.",
+  },
+];
+
+const PAGE_CAPABILITY_HINTS: Partial<Record<ViewKey, string>> = {
+  dashboard: "On this Dashboard I can add or remove widgets — Supplier Insights, Delivery Timeline, Pending Requests, PO Status Breakdown, Critical Materials.",
+  "po-upload": "On this PO Upload page I can look up a PO by number, tell you which POs are missing materials, or filter the list down to active POs.",
+  production: "On this Production page I can tell you which PO is most urgent, or sort the cards by delivery deadline.",
+  inventory: "On this Inventory page I can highlight critical materials, list what's low on stock, or spin up a dedicated Low Stock page.",
+  supplier: "On this Supplier Dashboard I can sort suppliers by rating, look up a supplier by name, or tell you how many supply requests are open.",
+  "low-stock": "On this Low Stock page I can sort materials by severity, or take you back to Inventory.",
+};
+
+const BOOTSTRAP_SUGGESTIONS = [
+  "Build me a dashboard",
+  "Add a PO upload page",
+  "Add a production tracking page",
+  "Add an inventory management page",
+  "Add a supplier dashboard page",
+];
+
+const ADVANCED_SUGGESTIONS = [
+  "Which materials are low on stock?",
+  "Status of PO-002",
+  "Add supplier dashboard insight to the main dashboard",
+  "Add delivery timeline to dashboard",
+  "Add a new page for just displaying the stocks which are low",
+];
+
+export interface SuggestionContext {
+  dashboardWidgets: DashboardWidgetKey[];
+  customPages: CustomPageKey[];
+  activePageFeatures: PageFeatureKey[];
+}
+
+interface SuggestionCandidate {
+  text: string;
+  satisfied?: (ctx: SuggestionContext) => boolean;
+}
+
+const PAGE_SUGGESTION_CANDIDATES: Partial<Record<ViewKey, SuggestionCandidate[]>> = {
+  dashboard: [
+    { text: "Add a Supplier Insights widget", satisfied: (c) => c.dashboardWidgets.includes("supplier-insights") },
+    { text: "Add a PO Status Breakdown widget", satisfied: (c) => c.dashboardWidgets.includes("po-status-breakdown") },
+    { text: "Add a Delivery Timeline widget", satisfied: (c) => c.dashboardWidgets.includes("delivery-timeline") },
+    { text: "Add a Pending Stock Requests widget", satisfied: (c) => c.dashboardWidgets.includes("pending-requests") },
+    { text: "Add a Critical Materials widget", satisfied: (c) => c.dashboardWidgets.includes("critical-materials") },
+    { text: "Which materials are low on stock?" },
+    { text: "Show pending stock requests" },
+  ],
+  "po-upload": [
+    { text: "Show only pending POs", satisfied: (c) => c.activePageFeatures.includes("po-upload-filter-active") },
+    { text: "Status of PO-002" },
+    { text: "Which POs are missing materials?" },
+  ],
+  production: [
+    { text: "Sort by delivery urgency", satisfied: (c) => c.activePageFeatures.includes("production-sort-urgent") },
+    { text: "Which PO is most urgent?" },
+    { text: "Which materials are low on stock?" },
+  ],
+  inventory: [
+    { text: "Highlight critical materials", satisfied: (c) => c.activePageFeatures.includes("inventory-highlight-critical") },
+    { text: "Add a page for just low stock materials", satisfied: (c) => c.customPages.includes("low-stock") },
+    { text: "Which materials are low on stock?" },
+    { text: "How many pending requests are there?" },
+  ],
+  supplier: [
+    { text: "Sort suppliers by rating", satisfied: (c) => c.activePageFeatures.includes("supplier-sort-rating") },
+    { text: "Add supplier insights to dashboard", satisfied: (c) => c.dashboardWidgets.includes("supplier-insights") },
+    { text: "How many supply requests are open?" },
+  ],
+  "low-stock": [
+    { text: "Sort by most critical", satisfied: (c) => c.activePageFeatures.includes("low-stock-sort-severity") },
+    { text: "Take me to Inventory" },
+  ],
+};
+
+const SUGGESTION_BACKFILL = ["Which materials are low on stock?", "Show pending stock requests", "How many supply requests are open?"];
+
+export function getSuggestedPrompts(page: ViewKey, unlockedPages: CorePageKey[], ctx: SuggestionContext): string[] {
+  if (page === "assistant") {
+    return unlockedPages.length === 0 ? BOOTSTRAP_SUGGESTIONS : ADVANCED_SUGGESTIONS;
+  }
+  const candidates = PAGE_SUGGESTION_CANDIDATES[page];
+  if (!candidates) return ADVANCED_SUGGESTIONS;
+  const active = candidates.filter((s) => !s.satisfied?.(ctx)).map((s) => s.text);
+  for (const fallback of SUGGESTION_BACKFILL) {
+    if (active.length >= 3) break;
+    if (!active.includes(fallback)) active.push(fallback);
+  }
+  return active.slice(0, 3);
+}
+
+function daysUntilDelivery(dateStr: string) {
+  const target = new Date(dateStr).getTime();
+  const now = new Date("2026-07-07").getTime();
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
+function mostUrgentPo(purchaseOrders: PurchaseOrder[]): PurchaseOrder | null {
+  const visible = purchaseOrders.filter((p) => p.status !== "draft" && p.status !== "completed");
+  if (visible.length === 0) return null;
+  return visible.reduce((soonest, p) => (daysUntilDelivery(p.deliveryDate) < daysUntilDelivery(soonest.deliveryDate) ? p : soonest));
+}
+
 function listLowStock(materials: Material[]) {
   return materials.filter((m) => m.currentStock <= m.reorderPoint);
 }
@@ -154,7 +311,7 @@ function needsCorePageMessage(requirement: CorePageKey, forLabel: string): strin
   return `I'll need to build the ${CORE_PAGE_LABELS[requirement]} page first — try asking me to build that before requesting the ${forLabel} page.`;
 }
 
-export function generateReply(rawQuery: string, state: AssistantState): AssistantReply {
+export function generateReply(rawQuery: string, state: AssistantState, page: ViewKey): AssistantReply {
   const q = rawQuery.trim().toLowerCase();
 
   if (!q) {
@@ -164,7 +321,23 @@ export function generateReply(rawQuery: string, state: AssistantState): Assistan
     };
   }
 
-  const isRemove = /\b(remove|delete|hide|dismiss)\b/.test(q);
+  const isRemove = /\b(remove|delete|hide|dismiss|undo|revert)\b/.test(q);
+
+  for (const intent of PAGE_FEATURE_INTENTS) {
+    if (intent.page !== page) continue;
+    if (!intent.matches(q)) continue;
+    if (isRemove) {
+      return {
+        text: `Done — reverted "${intent.label}" back to the default view.`,
+        removePageFeature: intent.key,
+        delayMs: 900,
+      };
+    }
+    if (state.activePageFeatures.includes(intent.key)) {
+      return { text: `"${intent.label}" is already active on this page.`, delayMs: 700 };
+    }
+    return { text: intent.addText, addPageFeature: intent.key, delayMs: intent.addDelayMs };
+  }
 
   for (const intent of WIDGET_INTENTS) {
     if (!intent.matches(q)) continue;
@@ -179,6 +352,18 @@ export function generateReply(rawQuery: string, state: AssistantState): Assistan
       return { text: needsCorePageMessage("dashboard", intent.label), delayMs: 1200 };
     }
     return { text: intent.addText, addWidget: intent.key, navigateTo: "dashboard", delayMs: intent.addDelayMs };
+  }
+
+  if (page === "production" && (q.includes("most urgent") || q.includes("most overdue") || q.includes("which po") || q.includes("overdue"))) {
+    const po = mostUrgentPo(state.purchaseOrders);
+    if (!po) {
+      return { text: "There are no POs in production right now.", delayMs: 1000 };
+    }
+    const days = daysUntilDelivery(po.deliveryDate);
+    return {
+      text: `${po.poNumber} (${po.clientName}) is the most time-critical — delivery ${po.deliveryDate}, ${days >= 0 ? `${days} day(s) away` : "already overdue"}.`,
+      delayMs: 1200,
+    };
   }
 
   for (const intent of PAGE_INTENTS) {
@@ -255,15 +440,20 @@ export function generateReply(rawQuery: string, state: AssistantState): Assistan
     };
   }
 
+  const pageHint = PAGE_CAPABILITY_HINTS[page];
+
   if (q.includes("help") || q.includes("what can you")) {
+    const base = "I can build pages for you — try \"Build me a dashboard\", \"Add a PO upload page\", \"Add a production tracking page\", \"Add an inventory management page\", or \"Add a supplier dashboard page\". Once a page exists I can also add widgets to it or answer questions about stock, POs, and suppliers.";
     return {
-      text: "I can build pages for you — try \"Build me a dashboard\", \"Add a PO upload page\", \"Add a production tracking page\", \"Add an inventory management page\", or \"Add a supplier dashboard page\". Once a page exists I can also add widgets to it or answer questions about stock, POs, and suppliers.",
+      text: pageHint ? `${pageHint}\n\n${base}` : base,
       delayMs: 1000,
     };
   }
 
   return {
-    text: "I'm not sure about that yet. Try asking me to build a page — e.g. \"Build me a dashboard\" — or ask \"help\" for more examples.",
+    text: pageHint
+      ? `I'm not sure about that yet. ${pageHint} Or ask "help" for more examples.`
+      : "I'm not sure about that yet. Try asking me to build a page — e.g. \"Build me a dashboard\" — or ask \"help\" for more examples.",
     delayMs: 1200,
   };
 }

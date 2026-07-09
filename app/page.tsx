@@ -57,7 +57,7 @@ function AppShell() {
       </div>
       <ToastContainer />
       <SupplyRequestModal />
-      <FloatingAssistant hidden={view === "assistant"} />
+      <FloatingAssistant hidden={view === "assistant"} page={view} />
     </div>
   );
 }

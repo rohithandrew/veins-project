@@ -2,27 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
-import { generateReply } from "@/lib/assistant";
+import { generateReply, getSuggestedPrompts } from "@/lib/assistant";
+import type { ViewKey } from "@/lib/types";
 import { IconSparkles, IconSend } from "./icons";
 
-const BOOTSTRAP_SUGGESTIONS = [
-  "Build me a dashboard",
-  "Add a PO upload page",
-  "Add a production tracking page",
-  "Add an inventory management page",
-  "Add a supplier dashboard page",
-];
-
-const ADVANCED_SUGGESTIONS = [
-  "Which materials are low on stock?",
-  "Status of PO-002",
-  "Add supplier dashboard insight to the main dashboard",
-  "Add delivery timeline to dashboard",
-  "Add a new page for just displaying the stocks which are low",
-];
-
-export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel" }) {
-  const { assistantMessages, materials, suppliers, purchaseOrders, stockRequests, supplyRequests, unlockedPages, dispatch } = useStore();
+export function AssistantChat({ variant = "page", page }: { variant?: "page" | "panel"; page: ViewKey }) {
+  const {
+    assistantMessages,
+    materials,
+    suppliers,
+    purchaseOrders,
+    stockRequests,
+    supplyRequests,
+    unlockedPages,
+    activePageFeatures,
+    dashboardWidgets,
+    customPages,
+    dispatch,
+  } = useStore();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +32,11 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
     if (!trimmed) return;
     dispatch({ type: "ASSISTANT_ASK", text: trimmed });
     setInput("");
-    const reply = generateReply(trimmed, { materials, suppliers, purchaseOrders, stockRequests, supplyRequests, unlockedPages });
+    const reply = generateReply(
+      trimmed,
+      { materials, suppliers, purchaseOrders, stockRequests, supplyRequests, unlockedPages, activePageFeatures },
+      page
+    );
     setTimeout(() => {
       dispatch({
         type: "ASSISTANT_REPLY",
@@ -45,13 +46,15 @@ export function AssistantChat({ variant = "page" }: { variant?: "page" | "panel"
         addPage: reply.addPage,
         removePage: reply.removePage,
         unlockPage: reply.unlockPage,
+        addPageFeature: reply.addPageFeature,
+        removePageFeature: reply.removePageFeature,
         navigateTo: reply.navigateTo,
       });
     }, reply.delayMs);
   }
 
   const heightClass = variant === "page" ? "h-[70vh]" : "h-[28rem]";
-  const suggestions = unlockedPages.length === 0 ? BOOTSTRAP_SUGGESTIONS : ADVANCED_SUGGESTIONS;
+  const suggestions = getSuggestedPrompts(page, unlockedPages, { dashboardWidgets, customPages, activePageFeatures });
 
   return (
     <div className={`flex flex-col bg-[var(--color-surface)] ${heightClass} ${variant === "page" ? "rounded-2xl border border-[var(--color-line)]" : ""}`}>
